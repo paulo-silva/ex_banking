@@ -1,0 +1,39 @@
+version: 2.1
+jobs:
+  build:
+    docker:
+      # Elixir version
+      - image: circleci/elixir:1.11.1
+    steps:
+      - checkout
+      - run: mix do local.hex --force, local.rebar --force
+
+      # Restore Caches
+      - restore_cache:
+          keys:
+            - v1-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+            - v1-mix-cache-{{ .Branch }}
+      - restore_cache:
+          keys:
+            - v1-build-cache-{{ .Branch }}
+
+      # Get Deps and Compile
+      - run: mix deps.get
+      - run: mix compile --warnings-as-errors
+
+      # Save Caches
+      - save_cache:
+          key: v1-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
+          paths: "deps"
+      - save_cache:
+          key: v1-mix-cache-{{ .Branch }}
+          paths: "deps"
+      - save_cache:
+          key: v1-build-cache-{{ .Branch }}
+          paths: "_build"
+      - save_cache:
+          key: v1-build-cache
+          paths: "_build"
+
+      - run: mix credo --strict
+      - run: mix format --check-formatted
