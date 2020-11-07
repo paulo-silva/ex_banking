@@ -1,8 +1,12 @@
 defmodule ExBankingTest do
   use ExUnit.Case
-  doctest ExBanking
 
-  test "greets the world" do
-    assert ExBanking.hello() == :world
+  alias ExBanking.User
+
+  describe "create_user/1" do
+    test "should create a new user" do
+      assert ExBanking.create_user("Paulo") == :ok
+      assert User.find_user("Paulo") == {:ok, "Paulo"}
+    end
   end
 end
