@@ -1,12 +1,63 @@
 defmodule ExBankingTest do
   use ExUnit.Case
 
-  alias ExBanking.User
+  alias ExBanking.{Balance, User}
+
+  setup do
+    on_exit(fn ->
+      GenServer.call(User, :purge)
+      GenServer.call(Balance, :purge)
+    end)
+  end
 
   describe "create_user/1" do
-    test "should create a new user" do
+    test "create a new user" do
       assert ExBanking.create_user("Paulo") == :ok
       assert User.find_user("Paulo") == {:ok, "Paulo"}
+    end
+
+    test "fail if user already exist" do
+      :ok = ExBanking.create_user("Paulo")
+
+      assert ExBanking.create_user("Paulo") == {:error, :user_already_exists}
+    end
+  end
+
+  describe "deposit/3" do
+    test "make a deposit" do
+      :ok = ExBanking.create_user("Paulo")
+
+      assert ExBanking.deposit("Paulo", 150, "USD") == {:ok, 150}
+    end
+
+    test "should format amount to be 2 decimal precision" do
+      :ok = ExBanking.create_user("Paulo")
+
+      assert ExBanking.deposit("Paulo", 1234.86552, "USD") == {:ok, 1234.86}
+    end
+
+    test "fail if user does not exist" do
+      assert ExBanking.deposit("Paulo", 150, "USD") == {:error, :user_does_not_exist}
+    end
+  end
+
+  describe "withdraw/3" do
+    test "make a withdraw" do
+      :ok = ExBanking.create_user("Paulo")
+      ExBanking.deposit("Paulo", 150, "USD")
+
+      assert ExBanking.withdraw("Paulo", 50, "USD") == {:ok, 100}
+    end
+
+    test "should format amount to be 2 decimal precision" do
+      :ok = ExBanking.create_user("Paulo")
+      ExBanking.deposit("Paulo", 150, "USD")
+
+      assert ExBanking.withdraw("Paulo", 123.33333, "USD") == {:ok, 26.67}
+    end
+
+    test "fail if balance is lower than provided amount" do
+      assert ExBanking.withdraw("Paulo", 50, "USD") == {:error, :user_does_not_exist}
     end
   end
 end

@@ -8,6 +8,7 @@ defmodule ExBanking.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      ExBanking.Balance,
       ExBanking.User
     ]
 

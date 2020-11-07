@@ -40,4 +40,11 @@ defmodule ExBanking.User do
 
     {:ok, state}
   end
+
+  @impl true
+  def handle_call(:purge, _from, state) do
+    :ets.delete_all_objects(@ets_table_name)
+
+    {:reply, :ok, state}
+  end
 end
