@@ -53,4 +53,29 @@ defmodule ExBanking do
         error
     end
   end
+
+  @spec send(
+          from_user :: String.t(),
+          to_user :: String.t(),
+          amount :: number,
+          currency :: String.t()
+        ) :: {:ok, from_user_balance :: number, to_user_balance :: number} | banking_error
+  def send(from_user, to_user, amount, currency) do
+    with {:from_user, {:ok, from_user}} <- {:from_user, User.find_user(from_user)},
+         {:to_user, {:ok, to_user}} <- {:to_user, User.find_user(to_user)},
+         {:withdraw, {:ok, from_user_balance}} <-
+           {:withdraw, Balance.withdraw(from_user, currency, amount)},
+         {:ok, to_user_balance} <- Balance.deposit(to_user, currency, amount) do
+      {:ok, from_user_balance, to_user_balance}
+    else
+      {:from_user, {:error, :user_does_not_exist}} ->
+        {:error, :sender_does_not_exist}
+
+      {:to_user, {:error, :user_does_not_exist}} ->
+        {:error, :receiver_does_not_exist}
+
+      {:withdraw, error} ->
+        error
+    end
+  end
 end
