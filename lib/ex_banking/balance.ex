@@ -11,17 +11,21 @@ defmodule ExBanking.Balance do
 
   @spec deposit(user :: String.t(), amount :: number, currency :: String.t()) ::
           {:ok, new_balance :: number} | {:error, Atom.t()}
-  def deposit(user, currency, amount) do
+  def deposit(user, currency, amount) when is_binary(user) and is_binary(currency) do
     update_balance(user, currency, amount, "deposit")
   end
 
+  def deposit(_user, _balance, _amount), do: {:error, :wrong_arguments}
+
   @spec withdraw(user :: String.t(), amount :: number, currency :: String.t()) ::
           {:ok, new_balance :: number} | {:error, Atom.t()}
-  def withdraw(user, currency, amount) do
+  def withdraw(user, currency, amount) when is_binary(user) and is_binary(currency) do
     update_balance(user, currency, amount, "withdraw")
   end
 
-  def get_balance(user, currency) do
+  def withdraw(_user, _balance, _amount), do: {:error, :wrong_arguments}
+
+  def get_balance(user, currency) when is_binary(user) and is_binary(currency) do
     key = {user, currency}
 
     case :ets.lookup(@ets_table_name, key) do
@@ -29,6 +33,8 @@ defmodule ExBanking.Balance do
       [] -> 0
     end
   end
+
+  def get_balance(_user, _currency), do: {:error, :wrong_arguments}
 
   defp update_balance(user, currency, amount, "deposit") do
     case format_amount(amount) do

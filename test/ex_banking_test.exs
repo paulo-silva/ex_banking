@@ -22,6 +22,10 @@ defmodule ExBankingTest do
 
       assert ExBanking.create_user("Paulo") == {:error, :user_already_exists}
     end
+
+    test "fail if invalid data is provided" do
+      assert ExBanking.create_user(1) == {:error, :wrong_arguments}
+    end
   end
 
   describe "deposit/3" do
@@ -45,6 +49,14 @@ defmodule ExBankingTest do
       :ok = ExBanking.create_user("Paulo")
 
       assert ExBanking.deposit("Paulo", -150, "USD") == {:error, :wrong_arguments}
+    end
+
+    test "fail if invalid data is provided" do
+      :ok = ExBanking.create_user("Paulo")
+
+      assert ExBanking.deposit(1, 50, "USD") == {:error, :wrong_arguments}
+      assert ExBanking.deposit("Paulo", 50, 1) == {:error, :wrong_arguments}
+      assert ExBanking.deposit("Paulo", -1, "USD") == {:error, :wrong_arguments}
     end
   end
 
@@ -72,6 +84,14 @@ defmodule ExBankingTest do
 
       assert ExBanking.withdraw("Paulo", -150, "USD") == {:error, :wrong_arguments}
     end
+
+    test "fail if invalid data is provided" do
+      :ok = ExBanking.create_user("Paulo")
+
+      assert ExBanking.withdraw(1, 50, "USD") == {:error, :wrong_arguments}
+      assert ExBanking.withdraw("Paulo", 50, 1) == {:error, :wrong_arguments}
+      assert ExBanking.withdraw("Paulo", -1, "USD") == {:error, :wrong_arguments}
+    end
   end
 
   describe "get_balance/2" do
@@ -87,6 +107,13 @@ defmodule ExBankingTest do
 
     test "fail if user does not exist" do
       assert ExBanking.get_balance("Paulo", "USD") == {:error, :user_does_not_exist}
+    end
+
+    test "fail if invalid data is provided" do
+      :ok = ExBanking.create_user("Paulo")
+
+      assert ExBanking.get_balance(1, "USD") == {:error, :wrong_arguments}
+      assert ExBanking.get_balance("Paulo", 1) == {:error, :wrong_arguments}
     end
   end
 
@@ -120,6 +147,16 @@ defmodule ExBankingTest do
       assert ExBanking.send("Paulo", "Barbara", 50, "USD") == {:error, :not_enough_money}
       assert ExBanking.get_balance("Paulo", "USD") == {:ok, 40}
       assert ExBanking.get_balance("Barbara", "USD") == {:ok, 0}
+    end
+
+    test "fail if invalid data is provided" do
+      :ok = ExBanking.create_user("Paulo")
+      :ok = ExBanking.create_user("Barbara")
+
+      assert ExBanking.send(1, "Paulo", 10, "USD") == {:error, :wrong_arguments}
+      assert ExBanking.send("Paulo", 1, 10, "USD") == {:error, :wrong_arguments}
+      assert ExBanking.send("Paulo", "Barbara", -10, "USD") == {:error, :wrong_arguments}
+      assert ExBanking.send("Paulo", "Barbara", 10, 1) == {:error, :wrong_arguments}
     end
   end
 

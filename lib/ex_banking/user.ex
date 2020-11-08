@@ -8,15 +8,17 @@ defmodule ExBanking.User do
   @ets_table_name :users
 
   @spec find_user(user :: String.t()) :: {:ok, String.t()} | {:error, :user_does_not_exist}
-  def find_user(user) do
+  def find_user(user) when is_binary(user) and byte_size(user) > 0 do
     case :ets.lookup(@ets_table_name, user) do
       [{user}] -> {:ok, user}
       [] -> {:error, :user_does_not_exist}
     end
   end
 
-  @spec create_user(user :: String.t()) :: {:ok, String.t()} | {:error, :user_already_exists}
-  def create_user(user) do
+  def find_user(_user), do: {:error, :wrong_arguments}
+
+  @spec create_user(user :: String.t()) :: {:ok, String.t()} | {:error, Atom.t()}
+  def create_user(user) when is_binary(user) and byte_size(user) > 0 do
     case find_user(user) do
       {:ok, _user} ->
         {:error, :user_already_exists}
@@ -26,6 +28,8 @@ defmodule ExBanking.User do
         {:ok, user}
     end
   end
+
+  def create_user(_user), do: {:error, :wrong_arguments}
 
   # Server callbacks
 

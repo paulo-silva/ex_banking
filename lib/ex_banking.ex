@@ -63,7 +63,10 @@ defmodule ExBanking do
     result =
       case validate_user(user) do
         {:ok, user} ->
-          {:ok, Balance.get_balance(user, currency)}
+          case Balance.get_balance(user, currency) do
+            {:error, _reason} = error -> error
+            balance -> {:ok, balance}
+          end
 
         {:error, _reason} = error ->
           error
@@ -100,6 +103,9 @@ defmodule ExBanking do
 
         {:to_user, {:error, :too_many_requests_to_user}} ->
           {:error, :too_many_requests_to_receiver}
+
+        {_, {:error, :wrong_arguments} = error} ->
+          error
 
         {:withdraw, error} ->
           error
