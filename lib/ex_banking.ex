@@ -41,4 +41,16 @@ defmodule ExBanking do
         error
     end
   end
+
+  @spec get_balance(user :: String.t(), currency :: String.t()) ::
+          {:ok, balance :: number} | banking_error
+  def get_balance(user, currency) do
+    case User.find_user(user) do
+      {:ok, user} ->
+        {:ok, Balance.get_balance(user, currency)}
+
+      {:error, _reason} = error ->
+        error
+    end
+  end
 end

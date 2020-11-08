@@ -60,4 +60,20 @@ defmodule ExBankingTest do
       assert ExBanking.withdraw("Paulo", 50, "USD") == {:error, :user_does_not_exist}
     end
   end
+
+  describe "get_balance/2" do
+    test "returns current balance of a user" do
+      :ok = ExBanking.create_user("Paulo")
+
+      assert ExBanking.get_balance("Paulo", "USD") == {:ok, 0}
+
+      ExBanking.deposit("Paulo", 150, "USD")
+
+      assert ExBanking.get_balance("Paulo", "USD") == {:ok, 150}
+    end
+
+    test "fail if user does not exist" do
+      assert ExBanking.get_balance("Paulo", "USD") == {:error, :user_does_not_exist}
+    end
+  end
 end
