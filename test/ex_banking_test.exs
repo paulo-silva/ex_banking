@@ -40,6 +40,12 @@ defmodule ExBankingTest do
     test "fail if user does not exist" do
       assert ExBanking.deposit("Paulo", 150, "USD") == {:error, :user_does_not_exist}
     end
+
+    test "fail if amount is negative" do
+      :ok = ExBanking.create_user("Paulo")
+
+      assert ExBanking.deposit("Paulo", -150, "USD") == {:error, :wrong_arguments}
+    end
   end
 
   describe "withdraw/3" do
@@ -59,6 +65,12 @@ defmodule ExBankingTest do
 
     test "fail if balance is lower than provided amount" do
       assert ExBanking.withdraw("Paulo", 50, "USD") == {:error, :user_does_not_exist}
+    end
+
+    test "fail if amount is negative" do
+      :ok = ExBanking.create_user("Paulo")
+
+      assert ExBanking.withdraw("Paulo", -150, "USD") == {:error, :wrong_arguments}
     end
   end
 

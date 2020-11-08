@@ -31,33 +31,44 @@ defmodule ExBanking.Balance do
   end
 
   defp update_balance(user, currency, amount, "deposit") do
-    amount = format_amount(amount)
-    cur_balance = get_balance(user, currency)
-    key = {user, currency}
+    case format_amount(amount) do
+      {:ok, amount} ->
+        cur_balance = get_balance(user, currency)
+        key = {user, currency}
 
-    new_balance = cur_balance + amount
-    :ets.insert(@ets_table_name, {key, new_balance})
+        new_balance = cur_balance + amount
+        :ets.insert(@ets_table_name, {key, new_balance})
 
-    {:ok, new_balance}
-  end
+        {:ok, new_balance}
 
-  defp update_balance(user, currency, amount, "withdraw") do
-    amount = format_amount(amount)
-    cur_balance = get_balance(user, currency)
-    key = {user, currency}
-
-    if cur_balance >= amount do
-      new_balance = cur_balance - amount
-      :ets.insert(@ets_table_name, {key, new_balance})
-
-      {:ok, new_balance}
-    else
-      {:error, :not_enough_money}
+      {:error, :wrong_arguments} = error ->
+        error
     end
   end
 
-  defp format_amount(amount) when is_float(amount), do: trunc(amount * 100) / 100
-  defp format_amount(amount), do: amount
+  defp update_balance(user, currency, amount, "withdraw") do
+    case format_amount(amount) do
+      {:ok, amount} ->
+        cur_balance = get_balance(user, currency)
+        key = {user, currency}
+
+        if cur_balance >= amount do
+          new_balance = cur_balance - amount
+          :ets.insert(@ets_table_name, {key, new_balance})
+
+          {:ok, new_balance}
+        else
+          {:error, :not_enough_money}
+        end
+
+      {:error, :wrong_arguments} = error ->
+        error
+    end
+  end
+
+  defp format_amount(amount) when amount < 0, do: {:error, :wrong_arguments}
+  defp format_amount(amount) when is_float(amount), do: {:ok, trunc(amount * 100) / 100}
+  defp format_amount(amount), do: {:ok, amount}
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
