@@ -9,7 +9,8 @@ defmodule ExBanking.Application do
   def start(_type, _args) do
     children = [
       ExBanking.Balance,
-      ExBanking.User
+      ExBanking.User,
+      ExBanking.OperationThrottle
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

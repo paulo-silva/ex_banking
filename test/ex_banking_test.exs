@@ -1,12 +1,13 @@
 defmodule ExBankingTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
-  alias ExBanking.{Balance, User}
+  alias ExBanking.{Balance, OperationThrottle, User}
 
   setup do
     on_exit(fn ->
       GenServer.call(User, :purge)
       GenServer.call(Balance, :purge)
+      GenServer.call(OperationThrottle, :purge)
     end)
   end
 
@@ -107,6 +108,35 @@ defmodule ExBankingTest do
       assert ExBanking.send("Paulo", "Barbara", 50, "USD") == {:error, :not_enough_money}
       assert ExBanking.get_balance("Paulo", "USD") == {:ok, 40}
       assert ExBanking.get_balance("Barbara", "USD") == {:ok, 0}
+    end
+  end
+
+  describe "operation throttle" do
+    test "ensure that user does not have more than 10 operations in pending state" do
+      :ok = ExBanking.create_user("Paulo")
+
+      %{ok: success, error: error} =
+        1..15
+        |> Enum.map(fn _x -> Task.async(ExBanking, :deposit, ["Paulo", 50, "USD"]) end)
+        |> Enum.map(&Task.await/1)
+        |> Enum.group_by(fn {key, _value} -> key end)
+
+      assert length(success) == 10
+      assert length(error) == 5
+      assert Enum.all?(error, &(&1 == {:error, :too_many_requests_to_user}))
+    end
+
+    test "reset operation limit after 500ms" do
+      :ok = ExBanking.create_user("Paulo")
+
+      1..15
+      |> Enum.map(fn _x -> Task.async(ExBanking, :deposit, ["Paulo", 50, "USD"]) end)
+      |> Enum.map(&Task.await/1)
+
+      assert OperationThrottle.get_requests("Paulo") == 9
+      :timer.sleep(500)
+
+      assert OperationThrottle.get_requests("Paulo") == 0
     end
   end
 end
