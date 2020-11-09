@@ -9,6 +9,18 @@ defmodule ExBanking.OperationThrottle do
   @request_limit 10
   @throttle_ttl_msec 500
 
+  @doc """
+  Check if the operations limit of a user reached and if so,
+  schedule to reset the limit after @throttle_ttl_msec milliseconds.
+
+  Returns true | false
+
+  ## Examples
+
+      iex> ExBanking.OperationThrottle.limit_reached?("Paulo")
+      false
+  """
+  @spec limit_reached?(user :: String.t()) :: boolean
   def limit_reached?(user) do
     cur_requests = get_requests(user)
 
@@ -21,10 +33,12 @@ defmodule ExBanking.OperationThrottle do
     end
   end
 
+  @spec reset_limit(user :: String.t()) :: true
   def reset_limit(user) do
     :ets.insert(@ets_table_name, {user, 0})
   end
 
+  @spec get_requests(user :: String.t()) :: number()
   def get_requests(user) do
     case :ets.lookup(@ets_table_name, user) do
       [{^user, cur_req_number}] -> cur_req_number
@@ -32,11 +46,13 @@ defmodule ExBanking.OperationThrottle do
     end
   end
 
+  @spec inc_request(user :: String.t()) :: true
   def inc_request(user) do
     cur_requests = get_requests(user)
     :ets.insert(@ets_table_name, {user, min(10, cur_requests + 1)})
   end
 
+  @spec dec_request(user :: String.t()) :: true
   def dec_request(user) do
     cur_requests = get_requests(user)
     :timer.sleep(1)

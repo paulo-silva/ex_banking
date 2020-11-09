@@ -1,14 +1,11 @@
 defmodule ExBankingTest do
   use ExUnit.Case, async: true
+  import Helpers
 
-  alias ExBanking.{Balance, OperationThrottle, User}
+  alias ExBanking.{OperationThrottle, User}
 
   setup do
-    on_exit(fn ->
-      GenServer.call(User, :purge)
-      GenServer.call(Balance, :purge)
-      GenServer.call(OperationThrottle, :purge)
-    end)
+    on_exit(&purge_ets_tables/0)
   end
 
   describe "create_user/1" do

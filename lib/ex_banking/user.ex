@@ -7,18 +7,54 @@ defmodule ExBanking.User do
 
   @ets_table_name :users
 
+  @doc """
+  Search for a given user in users ets table.
+
+  Returns {:ok, user}
+
+  ## Examples
+
+      iex> ExBanking.User.create_user("Paulo")
+      ...> ExBanking.User.find_user("Paulo")
+      {:ok, "Paulo"}
+
+      iex> ExBanking.User.find_user("Adam")
+      {:error, :user_does_not_exist}
+
+      iex> ExBanking.User.find_user(1)
+      {:error, :wrong_arguments}
+  """
   @spec find_user(user :: String.t()) :: {:ok, String.t()} | {:error, :user_does_not_exist}
-  def find_user(user) when is_binary(user) and byte_size(user) > 0 do
+  def find_user(user) when not is_binary(user), do: {:error, :wrong_arguments}
+
+  def find_user(user) do
     case :ets.lookup(@ets_table_name, user) do
       [{user}] -> {:ok, user}
       [] -> {:error, :user_does_not_exist}
     end
   end
 
-  def find_user(_user), do: {:error, :wrong_arguments}
+  @doc """
+  Create a user in users ets table, unless the user already exist.
 
+  Returns {:ok, user}
+
+  ## Examples
+
+      iex> ExBanking.User.create_user("Paulo")
+      {:ok, "Paulo"}
+
+      iex> ExBanking.User.create_user(1)
+      {:error, :wrong_arguments}
+
+      iex> ExBanking.User.create_user("Barbara")
+      ...> ExBanking.User.create_user("Barbara")
+      {:error, :user_already_exists}
+  """
   @spec create_user(user :: String.t()) :: {:ok, String.t()} | {:error, Atom.t()}
-  def create_user(user) when is_binary(user) and byte_size(user) > 0 do
+  def create_user(user) when not is_binary(user), do: {:error, :wrong_arguments}
+
+  def create_user(user) do
     case find_user(user) do
       {:ok, _user} ->
         {:error, :user_already_exists}
@@ -28,8 +64,6 @@ defmodule ExBanking.User do
         {:ok, user}
     end
   end
-
-  def create_user(_user), do: {:error, :wrong_arguments}
 
   # Server callbacks
 
