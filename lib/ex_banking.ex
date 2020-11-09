@@ -3,10 +3,16 @@ defmodule ExBanking do
   Documentation for `ExBanking`.
   """
   @type banking_error ::
-          {:error, :wrong_arguments, :user_already_exists, :user_does_not_exist,
-           :not_enough_money, :sender_does_not_exist, :receiver_does_not_exist,
-           :too_many_requests_to_user, :too_many_requests_to_sender,
-           :too_many_requests_to_receiver}
+          {:error,
+           :wrong_arguments
+           | :user_already_exists
+           | :user_does_not_exist
+           | :not_enough_money
+           | :sender_does_not_exist
+           | :receiver_does_not_exist
+           | :too_many_requests_to_user
+           | :too_many_requests_to_sender
+           | :too_many_requests_to_receiver}
 
   alias ExBanking.{Balance, OperationThrottle, User}
 
@@ -63,10 +69,7 @@ defmodule ExBanking do
     result =
       case validate_user(user) do
         {:ok, user} ->
-          case Balance.get_balance(user, currency) do
-            {:error, _reason} = error -> error
-            balance -> {:ok, balance}
-          end
+          Balance.get_balance(user, currency)
 
         {:error, _reason} = error ->
           error

@@ -29,8 +29,8 @@ defmodule ExBanking.Balance do
     key = {user, currency}
 
     case :ets.lookup(@ets_table_name, key) do
-      [{^key, cur_balance}] -> cur_balance
-      [] -> 0
+      [{^key, cur_balance}] -> {:ok, cur_balance}
+      [] -> {:ok, 0}
     end
   end
 
@@ -39,7 +39,7 @@ defmodule ExBanking.Balance do
   defp update_balance(user, currency, amount, "deposit") do
     case format_amount(amount) do
       {:ok, amount} ->
-        cur_balance = get_balance(user, currency)
+        {:ok, cur_balance} = get_balance(user, currency)
         key = {user, currency}
 
         new_balance = cur_balance + amount
@@ -55,7 +55,7 @@ defmodule ExBanking.Balance do
   defp update_balance(user, currency, amount, "withdraw") do
     case format_amount(amount) do
       {:ok, amount} ->
-        cur_balance = get_balance(user, currency)
+        {:ok, cur_balance} = get_balance(user, currency)
         key = {user, currency}
 
         if cur_balance >= amount do
